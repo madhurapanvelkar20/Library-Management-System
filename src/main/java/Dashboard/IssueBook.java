@@ -60,7 +60,7 @@ public class IssueBook extends javax.swing.JFrame {
         jLabel1.setText("Book ID");
 
         jLabel2.setFont(new java.awt.Font("Arial Rounded MT Bold", 0, 18)); // NOI18N
-        jLabel2.setText("Student ID");
+        jLabel2.setText("Member ID");
 
         jLabel3.setFont(new java.awt.Font("Arial Rounded MT Bold", 0, 18)); // NOI18N
         jLabel3.setText("Issue Date");

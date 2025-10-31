@@ -4,7 +4,9 @@
  */
 package Dashboard;
 import Project.ConnectionProvider;
+import java.awt.HeadlessException;
 import java.sql.*;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -22,14 +24,22 @@ public class ViewRecords extends javax.swing.JFrame {
         initComponents();
         loadIssueDetails();
         loadReturnDetails();
+        String[] columns = {"Book ID", "Author", "Book Title", "Category", "Genre", "ISBN"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        jTable3.setModel(model);
     }
     
     public void loadIssueDetails() {
-        try 
-        {
+        try {
             Connection con = ConnectionProvider.getCon();
             Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM issued_books WHERE book_returned='No'");
+            String query = "SELECT ib.book_id, b.title AS book_title, ib.member_id, m.name AS member_name, " +
+                           "m.role AS member_role, ib.issue_date, ib.due_date " +
+                           "FROM issued_books ib " +
+                           "JOIN books b ON ib.book_id = b.book_id " +
+                           "JOIN members m ON ib.member_id = m.member_id " +
+                           "WHERE ib.book_returned = 'No'";
+            ResultSet rs = st.executeQuery(query);
 
             DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
             model.setRowCount(0); // clear old data
@@ -37,14 +47,17 @@ public class ViewRecords extends javax.swing.JFrame {
             while (rs.next()) {
                 model.addRow(new Object[]{
                     rs.getString("book_id"),
+                    rs.getString("book_title"),
                     rs.getString("member_id"),
+                    rs.getString("member_name"),
+                    rs.getString("member_role"),
                     rs.getString("issue_date"),
                     rs.getString("due_date")
                 });
             }
         } 
         catch (SQLException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Error loading issue details: " + e.getMessage());
         }
     }
 
@@ -52,7 +65,13 @@ public class ViewRecords extends javax.swing.JFrame {
         try {
             Connection con = ConnectionProvider.getCon();
             Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM issued_books WHERE book_returned='Yes'");
+            String query = "SELECT ib.book_id, b.title AS book_title, ib.member_id, m.name AS member_name, " +
+                           "m.role AS member_role, ib.issue_date, ib.due_date " +
+                           "FROM issued_books ib " +
+                           "JOIN books b ON ib.book_id = b.book_id " +
+                           "JOIN members m ON ib.member_id = m.member_id " +
+                           "WHERE ib.book_returned = 'Yes'";
+            ResultSet rs = st.executeQuery(query);
 
             DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
             model.setRowCount(0);
@@ -60,13 +79,16 @@ public class ViewRecords extends javax.swing.JFrame {
             while (rs.next()) {
                 model.addRow(new Object[]{
                     rs.getString("book_id"),
+                    rs.getString("book_title"),
                     rs.getString("member_id"),
+                    rs.getString("member_name"),
+                    rs.getString("member_role"),
                     rs.getString("issue_date"),
                     rs.getString("due_date")
                 });
             }
         } catch (SQLException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Error loading return details: " + e.getMessage());
         }
     }
     
@@ -87,6 +109,14 @@ public class ViewRecords extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable2 = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jComboBox1 = new javax.swing.JComboBox<>();
+        jTextField1 = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jButton2 = new javax.swing.JButton();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTable3 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -97,13 +127,13 @@ public class ViewRecords extends javax.swing.JFrame {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Book ID", "Member ID", "Issue Date", "Return Date"
+                "Book ID", "Book Title", "Member ID", "Member Name", "Member Role", "Issue Date", "Due Date"
             }
         ));
         jScrollPane1.setViewportView(jTable1);
@@ -113,13 +143,13 @@ public class ViewRecords extends javax.swing.JFrame {
 
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Book ID", "Member ID", "Issue Date", "Return Date"
+                "Book ID", "Book Title", "Member ID", "Member Name", "Member Role", "Issue Date", "Due Date"
             }
         ));
         jScrollPane2.setViewportView(jTable2);
@@ -133,28 +163,80 @@ public class ViewRecords extends javax.swing.JFrame {
             }
         });
 
+        jLabel3.setFont(new java.awt.Font("Arial Rounded MT Bold", 1, 24)); // NOI18N
+        jLabel3.setText("Search for Book");
+
+        jComboBox1.setFont(new java.awt.Font("Arial Rounded MT Bold", 0, 12)); // NOI18N
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Book ID", "Author", "Book Name", "Category", "Genre", "ISBN" }));
+
+        jLabel4.setFont(new java.awt.Font("Arial Rounded MT Bold", 0, 14)); // NOI18N
+        jLabel4.setText("Search by filter:");
+
+        jLabel5.setFont(new java.awt.Font("Arial Rounded MT Bold", 0, 14)); // NOI18N
+        jLabel5.setText("Search by keyword:");
+
+        jButton2.setBackground(new java.awt.Color(204, 204, 255));
+        jButton2.setFont(new java.awt.Font("Arial Rounded MT Bold", 1, 14)); // NOI18N
+        jButton2.setText("Search");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Book ID", "Author", "Book Title", "Category", "Genre", "ISBN"
+            }
+        ));
+        jScrollPane3.setViewportView(jTable3);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(373, 373, 373)
-                        .addComponent(jLabel1))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(373, 373, 373)
-                        .addComponent(jLabel2))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(42, 42, 42)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 810, Short.MAX_VALUE)
-                            .addComponent(jScrollPane2))))
-                .addContainerGap(33, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jButton1)
-                .addGap(59, 59, 59))
+                .addComponent(jLabel1)
+                .addGap(438, 438, 438))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addGap(417, 417, 417))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addGap(412, 412, 412))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButton1)
+                        .addGap(51, 51, 51))))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(42, 42, 42)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 1005, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGap(164, 164, 164)
+                            .addComponent(jLabel4)
+                            .addGap(18, 18, 18)
+                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(48, 48, 48)
+                            .addComponent(jLabel5)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(118, 118, 118)
+                            .addComponent(jButton2)
+                            .addGap(23, 23, 23))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1005, Short.MAX_VALUE)
+                        .addComponent(jScrollPane2)))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -167,9 +249,20 @@ public class ViewRecords extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel3)
+                .addGap(8, 8, 8)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(jLabel5)
+                    .addComponent(jButton2))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(28, 28, 28)
                 .addComponent(jButton1)
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addContainerGap(134, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -190,6 +283,70 @@ public class ViewRecords extends javax.swing.JFrame {
         // TODO add your handling code here:
         setVisible(false);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        String searchBy = (String) jComboBox1.getSelectedItem();
+        String keyword = jTextField1.getText().trim();
+
+        DefaultTableModel model = (DefaultTableModel) jTable3.getModel();
+        model.setRowCount(0); // Clear previous results
+
+        String query = "";
+
+        // Base query for different search filters
+        if (keyword.isEmpty()) {
+            query = "SELECT book_id, author, title, category, genre, isbn FROM books";
+            if (searchBy.equals("Category")) {
+                query += " ORDER BY category";
+            } else if (searchBy.equals("Genre")) {
+                query += " ORDER BY genre";
+            } else if (searchBy.equals("Author")) {
+                query += " ORDER BY author";
+            } else if (searchBy.equals("ISBN")) {
+                query += " ORDER BY isbn";
+            } else if (searchBy.equals("Book Title")) {
+                query += " ORDER BY title";
+            } else if (searchBy.equals("Book ID")) {
+                query += " ORDER BY book_id";
+            }
+        } else {
+            query = "SELECT book_id, author, title, category, genre, isbn FROM books WHERE "
+                  + switch (searchBy) {
+                        case "Category" -> "category LIKE ?";
+                        case "Genre" -> "genre LIKE ?";
+                        case "Author" -> "author LIKE ?";
+                        case "ISBN" -> "isbn LIKE ?";
+                        case "Book Title" -> "title LIKE ?";
+                        case "Book ID" -> "book_id LIKE ?";
+                        default -> "title LIKE ?";
+                    };
+        }
+
+        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/shiksha_sangrah", "root", "Anshul@123");
+             PreparedStatement pst = con.prepareStatement(query)) {
+
+            if (!keyword.isEmpty()) {
+                pst.setString(1, "%" + keyword + "%");
+            }
+
+            ResultSet rs = pst.executeQuery();
+            while (rs.next()) {
+                String bookId = rs.getString("book_id");
+                String author = rs.getString("author");
+                String title = rs.getString("title");
+                String category = rs.getString("category");
+                String genre = rs.getString("genre");
+                String isbn = rs.getString("isbn");
+
+                model.addRow(new Object[]{bookId, author, title, category, genre, isbn});
+            }
+
+            rs.close();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -218,12 +375,20 @@ public class ViewRecords extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
+    private javax.swing.JTable jTable3;
+    private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
 }
